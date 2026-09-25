@@ -1,0 +1,240 @@
+<div class="users-container">
+    <div *ngIf="isLoading" class="loader-overlay">
+        <div class="loader-content">
+            <div class="spinner"></div>
+            <p>{{ loadingMessage }}</p>
+        </div>
+    </div>
+    <div class="dashboard-layout">
+        <div class="datatable-section">
+            <div class="card-header">
+                <div class="header-title-section">
+                    <div class="toolbar-container">
+
+                        <div class="toolbar-left">
+                            <a href="javascript:void(0)" class="back-btn" title="Back to Dashboard"
+                                (click)="goBack($event)">&#8592;</a>
+                            <span class="sheet-icon">📊</span>
+                            <span class="title-text">Tracking Sheet</span>
+
+                            <span class="project-details-badge">
+                                <strong>Project:</strong> {{ selectedProjectName || 'N/A' }} |
+                                <strong>From:</strong> {{ selectedFromDate | date:'dd/MM/yyyy' }} |
+                                <strong>To:</strong> {{ selectedToDate | date:'dd/MM/yyyy' }}
+                            </span>
+                        </div>
+                        <div class="toolbar-right">
+                            <div class="search-box-wrapper">
+                                <input type="text" class="search-input" placeholder="Search..." [(ngModel)]="searchText"
+                                    (input)="onSearchChange()" />
+                            </div>
+                            <button class="refresh-btn" (click)="onRefreshClick()" title="Refresh Data">
+                                <span class="refresh-icon" [class.spinning]="isRefreshing">&#x21bb;</span>
+                            </button>
+
+                            <button class="add-row-btn" (click)="addRow()">
+                                <span class="btn-icon">+</span> Add New Row
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="table-responsive excel-grid-wrapper">
+                <table class="feedback-table excel-style-table" (keydown)="moveRow($event)">
+                    <thead>
+                        <tr>
+                            <th class="action-column-header sticky-header-action" [style.left.px]="0"
+                                style="width: 150px; min-width: 150px; max-width: 150px;"> Actions </th>
+                            <th *ngFor="let col of dynamicColumns; let colIndex = index"
+                                [className]="colIndex === 0 ? 'sticky-header-col1' : (colIndex === 1 ? 'sticky-header-col2' : '')"
+                                [style.left.px]="colIndex === 0 ? 150 : (colIndex === 1 ? 310 : null)">
+                                {{ col.label }}
+                            </th>
+                        </tr>
+                    </thead>
+
+
+                    <tbody>
+                        <tr *ngIf="trackingData.length === 0">
+                            <td [attr.colspan]="(dynamicColumns.length || 0) + 1" class="no-records">
+                                📁 No records found. Add a new row to get started.
+                            </td>
+                        </tr>
+                        <tr *ngFor="let row of trackingData; let rowIndex = index">
+                            <td class="action-cell sticky-cell-action" [style.left.px]="0">
+                                <div class="action-container"
+                                    [class.has-start]="!isProjectManager && !row.isNew && row['PQA Assigned Datetime'] && (!row['PQA Start Datetime'] || row['PQA Start Datetime'].toString().trim() === '')">
+
+                                    <button
+                                        *ngIf="!isProjectManager && !row.isNew && 
+                                               ((row['PQA Assigned Datetime'] && (!row['PQA Start Datetime'] || row['PQA Start Datetime'].toString().trim() === '')) || 
+                                                (row['YQA Assigned Datetime'] && (!row['YQA Start Datetime'] || row['YQA Start Datetime'].toString().trim() === '')) || 
+                                                (row['Disp Assigned Datetime'] && (!row['Disp Start Datetime'] || row['Disp Start Datetime'].toString().trim() === '')))"
+                                        class="action-btn start-process-inline-btn"
+                                        (click)="startUserProcess(rowIndex)">
+                                        Start Process
+                                    </button>
+                                    <button *ngIf="!row.isNew" class="action-btn update-fixed-btn"
+                                        (click)="saveOrUpdateRow(rowIndex)">Update</button>
+
+                                    <button *ngIf="row.isNew" class="action-btn save-btn"
+                                        (click)="saveOrUpdateRow(rowIndex)">Save</button>
+                                </div>
+                            </td>
+
+
+
+
+
+                            <td *ngFor="let col of dynamicColumns; let colIndex = index"
+                                [className]="colIndex === 0 ? 'sticky-cell-col1' : (colIndex === 1 ? 'sticky-cell-col2' : '')"
+                                [style.left.px]="colIndex === 0 ? 150 : (colIndex === 1 ? 310 : null)">
+
+                                <div [ngSwitch]="col.dataType">
+
+                                    <select *ngSwitchCase="'dropdown'" [(ngModel)]="row[col.key]"
+                                        [id]="col.key.replace(/ /g, '-').toLowerCase() + '-' + rowIndex"
+                                        (change)="onDropdownChange($event, rowIndex, col.key,row)"
+                                        class="table-input excel-input"
+                                        [disabled]="isColumnInRangeToDisable(col.key, row)">
+
+                                        <option value="">-- Select --</option>
+                                        <option *ngFor="let opt of col.options" [value]="opt">
+                                            {{ opt }}
+                                        </option>
+                                    </select>
+
+                                    <ng-container *ngSwitchCase="'datetime'">
+                                        <input type="text" [value]="row[col.key] || ''"
+                                            [id]="col.key.replace(/ /g, '-').toLowerCase() + '-' + rowIndex"
+                                            (focus)="onDateTimeFocus($event, rowIndex, col.key)"
+                                            (input)="updateSelectValue($event, rowIndex, col.key)"
+                                            [readonly]="col.key.includes('End Datetime') || col.key.includes('TAT') || col.key.includes('Start Datetime') || col.key.includes('Assigned Datetime')"
+                                            [disabled]="isColumnInRangeToDisable(col.key, row)"
+                                            class="table-input excel-input readonly-input"
+                                            placeholder="MM/DD/YYYY HH:mm" />
+                                    </ng-container>
+                                    <ng-container *ngSwitchCase="'date'">
+
+                                        <input *ngIf="col.key === 'Dispatched Date'" type="text"
+                                            [value]="(row['PQA Process']?.trim() === 'SPQA') ? (row['PQA End Datetime'] || '') : ((row['Disp End Datetime'] | date:'MM/dd/yyyy') || '')"
+                                            readonly class="table-input excel-input readonly-input"
+                                            placeholder="MM/DD/YYYY" />
+                                        <ng-container *ngIf="col.key !== 'Dispatched Date'">
+                                            <div *ngIf="isProjectManager && col.key === 'Order Date'; else defaultDateInput"
+                                                style="position: relative; display: flex; align-items: center;">
+
+                                                <input type="text" [value]="row[col.key] || ''"
+                                                    placeholder="DD-MMM-YYYY" readonly class="table-input excel-input"
+                                                    style="width: 100%; padding-right: 30px;" />
+                                                <input type="date" #picker
+                                                    (change)="onPmDateSelection($event, rowIndex, col.key)"
+                                                    [disabled]="isColumnInRangeToDisable(col.key, row)" [max]="today"
+                                                    class="pm-picker" />
+                                            </div>
+
+                                            <ng-template #defaultDateInput>
+                                                <input type="text" [value]="row[col.key] || ''"
+                                                    (focus)="setDefaultDate($event, rowIndex, col)"
+                                                    (input)="updateSelectValue($event, rowIndex, col.key)"
+                                                    [readonly]="col.key === 'Order Date'"
+                                                    [disabled]="isColumnInRangeToDisable(col.key, row)"
+                                                    class="table-input excel-input" placeholder="DD-MM-YYYY" />
+                                            </ng-template>
+                                        </ng-container>
+                                    </ng-container>
+                                    <input *ngSwitchCase="'int'" type="number" [value]="row[col.key]"
+                                        [id]="col.key.replace(/ /g, '-').toLowerCase() + '-' + rowIndex"
+                                        (input)="updateSelectValue($event, rowIndex, col.key)"
+                                        [disabled]="isColumnInRangeToDisable(col.key, row)"
+                                        class="table-input excel-input text-right" />
+
+                                    <input *ngSwitchCase="'number'" type="number" [value]="row[col.key]"
+                                        [id]="col.key.replace(/ /g, '-').toLowerCase() + '-' + rowIndex"
+                                        (input)="updateSelectValue($event, rowIndex, col.key)"
+                                        [disabled]="isColumnInRangeToDisable(col.key, row)"
+                                        class="table-input excel-input text-right" />
+
+                                    <ng-container *ngSwitchDefault>
+
+                                        <select
+                                            *ngIf="col.key.toLowerCase() === 'pqa' || col.key.toLowerCase() === 'yqa' || col.key.toLowerCase() === 'disp'; else normalTextBox"
+                                            [(ngModel)]="row[col.key]" [id]="col.key.toLowerCase() + '-' + rowIndex"
+                                            (mousedown)="checkProcessClick($event, row)"
+                                            (keydown)="checkProcessKeyboard($event, row)"
+                                            (change)="onProcessChange($event, rowIndex, col.key, row)"
+                                            [disabled]="isColumnInRangeToDisable(col.key, row) "
+                                            class="table-input excel-input clickable-pqa">
+                                            <option *ngIf="row[col.key]" [value]="row[col.key]">{{ row[col.key] }}
+                                            </option>
+                                            <option *ngIf="!row[col.key]" value=""></option>
+
+                                            <ng-container *ngIf="isProjectManager">
+                                                <option *ngFor="let userCode of projectUserCodes" [value]="userCode">
+                                                    {{ userCode }}
+                                                </option>
+                                            </ng-container>
+
+                                            <ng-container *ngIf="!isProjectManager">
+                                                <option *ngIf="row[col.key] && row[col.key] !== loggedInUserCode"
+                                                    [value]="row[col.key]">
+                                                    {{ row[col.key] }}
+                                                </option>
+                                                <option *ngIf="!row[col.key]" [value]="loggedInUserCode">{{
+                                                    loggedInUserCode }}</option>
+                                            </ng-container>
+
+
+                                        </select>
+
+
+                                        <ng-template #normalTextBox>
+                                            <input *ngIf="col.key === 'Final Status'; else regularTextBox" type="text"
+                                                [value]="(row['PQA Process']?.trim() === 'SPQA') ? (row['PQA Status'] || '') : (row['Disp Status'] || '')"
+                                                readonly class="table-input excel-input readonly-input"
+                                                placeholder="Final Status" />
+                                            <ng-template #regularTextBox>
+                                                <input type="text" [value]="row[col.key]" #firstInput
+                                                    [id]="col.key.replace(/ /g, '-').toLowerCase() + '-' + rowIndex"
+                                                    (input)="updateSelectValue($event, rowIndex, col.key)"
+                                                    (blur)="onProcessBlur(col.key, row)"
+                                                    [readonly]="(col.key === 'Order#' && !row.isNew && !isProjectManager) || col.key === 'PQA TAT' || col.key === 'YQA TAT' || col.key === 'Disp TAT'"
+                                                    [disabled]="isColumnInRangeToDisable(col.key, row)"
+                                                    [class.readonly-input]="col.key === 'PQA TAT' || col.key === 'YQA TAT' || col.key === 'Disp TAT'"
+                                                    [title]="(col.key === 'Order#' || col.key.toLowerCase() === 'order number') ? row[col.key] : ''"
+                                                    class="table-input excel-input" />
+                                            </ng-template>
+                                        </ng-template>
+                                    </ng-container>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="custom-modal-backdrop" *ngIf="isOrderTrackingPopupOpen">
+    <div class="custom-modal-content">
+        <button class="close-popup-btn" (click)="closeOrderTrackingPopup()">❌</button>
+        <app-order-tracking [projectId]="projectId" [orderNumber]="getOrderNumber(selectedRowData)"
+            [pqaProcess]="selectedRowData ? (selectedRowData['PQA Process'] || selectedRowData['pqa_process'] || '') : ''"
+            [projectName]="selectedProjectName" (fileUploadedSuccess)="onFileUploadedSuccess($event)"
+            [OrderDate]="getOrderDate(selectedRowData)" (fileSelected)="onFileSelectedForUpload($event)"
+            [currentRowIndex]="trackingData.indexOf(selectedRowData)" [uploadedFiles]="uploadedFilesList">
+        </app-order-tracking>
+    </div>
+</div>
+<div class="custom-modal-backdrop" *ngIf="isFeedbackPopupOpen">
+    <div class="custom-modal-content">
+        <button class="close-popup-btn" (click)="closeFeedbackPopup()">❌</button>
+        <app-feedback-process [projectId]="projectId" [orderNumber]="getOrderNumber(selectedRowData)"
+            [processName]="currentFeedbackProcessName" [previousProcessName]="currentPreviousProcessName"
+            [currentRowIndex]="trackingData.indexOf(selectedRowData)" (feedbackSubmitted)="onFeedbackSubmitted($event)"
+            [projectName]="selectedProjectName" [orderDate]="getOrderDate(selectedRowData)" [empId]="loggedInEmpId"
+            [empcode]="loggedInUserCode"
+            [pqa]="currentFeedbackProcessName === 'DISP' ? selectedRowData['YQA'] : selectedRowData['PQA']">
+        </app-feedback-process>
+    </div>
+</div>

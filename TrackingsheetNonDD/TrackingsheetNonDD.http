@@ -1,0 +1,6 @@
+@TrackingsheetNonDD_HostAddress = http://localhost:5276
+
+GET {{TrackingsheetNonDD_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

@@ -1,0 +1,63 @@
+.order-tracking-box {
+    padding: 15px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.popup-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #eaeaea;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+}
+
+.badge {
+    background-color: #007bff;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
+.popup-data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+.popup-data-table th,
+.popup-data-table td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: left;
+    font-size: 14px;
+}
+
+.popup-data-table th {
+    background-color: #f4f6f9;
+    color: #333;
+    font-weight: 600;
+}
+
+.loader-section,
+.no-data-msg {
+    text-align: center;
+    padding: 30px;
+    color: #666;
+    font-weight: 500;
+}
+
+.download-btn {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.download-btn:hover {
+    background-color: #218838;
+}

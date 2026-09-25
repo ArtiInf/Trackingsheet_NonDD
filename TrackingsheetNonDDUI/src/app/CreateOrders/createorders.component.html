@@ -1,0 +1,226 @@
+<div class="users-container">
+  <!-- Sagle elements ekach header container madhye takle ahet -->
+  <div class="page-header" style="display: flex; align-items: center; gap: 24px; margin-bottom: 24px;">
+    
+    <!-- Back Button -->
+    <a routerLink="/dashboard" class="back-btn" title="Back to Dashboard" style="text-decoration: none; font-size: 20px;">
+      ←
+    </a>
+
+    <!-- Tabs (Single ani Bulk Order) -->
+    <ul class="nav-tabs" style="display: flex; list-style: none; margin: 0; padding: 0; gap: 15px;">
+      <li class="nav-item">
+        <button class="nav-link" [class.active]="activeTab === 'single'" id="single-tab" (click)="activeTab = 'single'">
+          Single Order
+        </button>
+      </li>
+      <li class="nav-item">
+        <button class="nav-link" [class.active]="activeTab === 'bulk'" id="bulk-tab" (click)="activeTab = 'bulk'">
+          Bulk Order
+        </button>
+      </li>
+    </ul>
+
+  </div>
+
+
+  <div class="tab-content">
+
+    <!-- 1. SINGLE ORDER TAB -->
+    <div class="tab-pane" [class.show]="activeTab === 'single'" [class.active]="activeTab === 'single'">
+      <form (ngSubmit)="validateAndSaveSingle()">
+        <div class="filter-form-grid closure-row">
+
+          <!-- Project Name -->
+          <div class="form-group">
+            <label for="projectName">PROJECT NAME <span class="text-danger">*</span></label>
+            <div class="input-wrapper">
+              <select id="projectName" class="form-control" [(ngModel)]="singleOrder.projectId" name="projectId"
+              size="1" 
+        onfocus="this.size=6;" 
+        onblur="this.size=1;">
+                <option value="">Select Project</option>
+
+               <option *ngFor="let proj of projectsList" [value]="proj.projectId" onclick="document.getElementById('projectName').blur();">
+          {{ proj.projectName }}
+        </option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Order Date -->
+          <div class="form-group">
+            <label for="orderDate">ORDER DATE <span class="text-danger">*</span></label>
+            <input type="date" id="orderDate" class="form-control" [(ngModel)]="singleOrder.orderDate" name="orderDate"
+              [max]="maxDate">
+          </div>
+
+          <!-- Order No -->
+          <div class="form-group">
+            <label for="orderNo">ORDER NO <span class="text-danger">*</span></label>
+            <input type="text" id="orderNo" class="form-control" [(ngModel)]="singleOrder.orderNo" name="orderNo"
+              placeholder="Enter Order Number">
+          </div>
+
+        </div>
+
+        <!-- Document Section Grid -->
+        <div class="document-grid-layout">
+          <div class="form-group">
+            <label>ATTACHED DOCUMENTS <span class="text-danger">*</span></label>
+            <div class="drag-drop-zone" [class.drag-over]="isDragging" (dragover)="onDragOver($event)"
+              (dragleave)="onDragLeave()" (drop)="onDrop($event, 'single')">
+
+              <input type="file" id="fileInputSingle" class="file-input-hidden"
+                (change)="onFileSelected($event, 'single')">
+
+              <label for="fileInputSingle" class="drag-drop-label">
+                <div class="upload-icon-cloud">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    class="cloud-svg">
+                    <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                    <polyline points="10 9 9 9 8 9"></polyline>
+                  </svg>
+                </div>
+                <p class="main-text">Drag & drop files here or <span class="browse-link">Browse</span></p>
+                <p class="sub-text">ZIP up to 50MB</p>
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>SELECTED DOCUMENTS</label>
+
+            <div class="no-files-placeholder" *ngIf="singleOrder.files.length === 0">
+              <span class="info-icon">ℹ️</span> No files uploaded yet.
+            </div>
+
+            <div class="selected-files-wrapper" *ngIf="singleOrder.files.length > 0">
+              <div class="file-list-header">
+                <span>UPLOADED FILES ({{ singleOrder.files.length }})</span>
+                <button type="button" class="clear-all-btn" (click)="singleOrder.files = []">Clear All</button>
+              </div>
+
+              <div class="file-upload-card" *ngFor="let file of singleOrder.files; let i = index">
+                <div class="file-icon">📄</div>
+                <div class="file-details">
+                  <div class="file-meta">
+                    <span class="file-name-text" [title]="file.name">{{ file.name }}</span>
+                    <span class="file-size-badge">{{ (file.size / 1024).toFixed(1) }} KB</span>
+                  </div>
+                </div>
+                <button type="button" class="remove-file-btn" (click)="singleOrder.files.splice(i, 1)"
+                  title="Remove file">✕</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="center-btn-container">
+          <button type="submit" class="proceed-btn">
+            <span>Save</span>
+            <span class="material-icons btn-icon">check_circle</span>
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- 2. BULK ORDER TAB -->
+    <div class="tab-pane" [class.show]="activeTab === 'bulk'" [class.active]="activeTab === 'bulk'">
+      <form (ngSubmit)="validateAndSaveBulk()">
+        <div class="filter-form-grid bulk-row">
+
+          <!-- Bulk Project Name -->
+          <div class="form-group">
+            <label for="bulkProjectName">PROJECT NAME <span class="text-danger">*</span></label>
+
+            <div class="dropdown-container">
+              <select id="bulkProjectName" class="form-control" [(ngModel)]="bulkOrder.projectId" name="bulkProjectId"
+              size="1" 
+        onfocus="this.size=6;" 
+        onblur="this.size=1;">
+                <option value="">Select Project</option>
+                <option *ngFor="let proj of projectsList" [value]="proj.projectId" onclick="document.getElementById('bulkProjectName').blur();">
+                  {{ proj.projectName }}
+                </option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Bulk Order Date -->
+          <div class="form-group">
+            <label for="bulkOrderDate">ORDER DATE <span class="text-danger">*</span></label>
+            <input type="date" id="bulkOrderDate" class="form-control" [(ngModel)]="bulkOrder.orderDate"
+              name="bulkOrderDate" [max]="maxDate">
+          </div>
+        </div>
+        <!-- Bulk Document Section Grid -->
+        <div class="document-grid-layout">
+          <div class="form-group">
+            <label>ATTACHED DOCUMENTS <span class="text-danger">*</span></label>
+            <div class="drag-drop-zone" [class.drag-over]="isDragging" (dragover)="onDragOver($event)"
+              (dragleave)="onDragLeave()" (drop)="onDrop($event, 'bulk')">
+
+              <input type="file" id="fileInputBulk" class="file-input-hidden" webkitdirectory directory multiple
+                accept=".zip" (change)="onFolderSelected($event)">
+
+              <label for="fileInputBulk" class="drag-drop-label">
+                <div class="upload-icon-cloud">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    class="cloud-svg">
+                    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                  </svg>
+                </div>
+                <p class="main-text">Drag & drop folder here or <span class="browse-link">Select Folder</span></p>
+                <p class="sub-text">ZIP files only</p>
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>FILES FOUND IN FOLDER</label>
+
+            <div class="no-files-placeholder" *ngIf="bulkOrder.files.length === 0">
+              <span class="info-icon">ℹ️</span> No folder selected yet.
+            </div>
+
+            <div class="selected-files-wrapper" *ngIf="bulkOrder.files.length > 0">
+              <div class="file-list-header">
+                <span>UPLOADED FILES ({{ bulkOrder.files.length }})</span>
+
+                <button type="button" class="clear-all-btn" (click)="bulkOrder.files = []">Clear All</button>
+              </div>
+
+              <div class="file-upload-card" *ngFor="let file of bulkOrder.files; let i = index">
+                <div class="file-icon">📄</div>
+                <div class="file-details">
+                  <div class="file-meta">
+                    <span class="file-name-text" [title]="file.name">
+                      {{ file.name.substring(0, file.name.lastIndexOf('.')) }}
+                    </span>
+                  </div>
+                </div>
+                <button type="button" class="remove-file-btn" (click)="bulkOrder.files.splice(i, 1)">✕</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="center-btn-container">
+          <button type="submit" class="proceed-btn">
+            <span>Save</span>
+            <span class="material-icons btn-icon">check_circle</span>
+          </button>
+        </div>
+      </form>
+    </div>
+
+  </div>
+
+
+</div>
