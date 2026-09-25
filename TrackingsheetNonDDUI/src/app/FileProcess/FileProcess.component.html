@@ -1,0 +1,50 @@
+<div class="order-tracking-box">
+    <div class="popup-header">
+        <h4>Order Wise File Process (Order#: {{ orderNumber }})</h4>
+        <span class="badge">Project : {{ projectName }}</span>
+    </div>
+    <div *ngIf="isLoading" class="loader-section">
+        Fetching details, please wait...
+    </div>
+    <div class="table-responsive-popup" *ngIf="!isLoading && packageDetails.length > 0">
+        <table class="popup-data-table">
+            <thead>
+                <tr>
+                    <ng-container *ngFor="let col of columnHeaders; let i = index">
+                        <th *ngIf="i === 1">Upload</th>
+                        <th>{{ col }}</th>
+                    </ng-container>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let row of packageDetails">
+                    <ng-container *ngFor="let col of columnHeaders; let i = index">
+                        <td *ngIf="i === 1">
+                            <input type="file" #hiddenFileInput style="display: none;"
+                                (change)="onFileSelected($event, row)">
+                            <button type="button" #firstUploadBtn class="btn btn-link btn-sm p-0 text-decoration-none"
+                                [disabled]="row['isFromServer'] === true" (click)="hiddenFileInput.click()">
+                                {{ row['File'] ? 'Re-upload' : 'Upload' }}
+                            </button>
+                        </td>
+                        <td>
+                            <ng-container *ngIf="col === 'File'; else regularText">
+                                <button class="btn btn-success btn-sm" (click)="downloadFile(row,row[col])"
+                                    [title]="row[col] ? 'Click to download' : 'No file available'">
+                                    📁 Download
+                                </button>
+                            </ng-container>
+
+                            <ng-template #regularText>
+                                {{ row[col] !== null ? row[col] : 'N/A' }}
+                            </ng-template>
+                        </td>
+                    </ng-container>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <div *ngIf="!isLoading && packageDetails.length === 0" class="no-data-msg">
+        No package details found for this order.
+    </div>
+</div>

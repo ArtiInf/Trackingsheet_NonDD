@@ -1,0 +1,161 @@
+
+<div class="users-container">
+  <div class="dashboard-layout">
+
+    <!-- Stats Cards Section -->
+    <div class="stats-grid">
+
+      <!-- Card 1: Total Projects -->
+      <div class="stat-card projects-card">
+        <div class="card-body">
+          <div class="card-info">
+            <span class="card-label">Total Projects</span>
+
+            <h2 class="card-value">{{ projectsList.length }}</h2>
+
+            <span class="card-subtext text-muted">Assigned to you</span>
+          </div>
+          <div class="card-icon-wrapper bg-primary-light">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+              class="card-icon text-primary">
+              <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"></path>
+              <path d="m9 12 2 2 4-4"></path>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <div class="stat-card loan-card">
+        <div class="card-body">
+          <div class="card-info">
+            <span class="card-label">Total Order</span>
+            <h2 class="card-value">
+              {{ orderCounts.total }}
+            </h2> <span class="card-subtext text-muted">Total sanctioned</span>
+          </div>
+          <div class="card-icon-wrapper bg-amber-light">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+              class="card-icon text-amber">
+              <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+              <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+              <polyline points="9 14 11 16 15 12"></polyline>
+            </svg>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 3: In Process -->
+      <div class="stat-card process-card">
+        <div class="card-body">
+          <div class="card-info">
+            <span class="card-label">In Process</span>
+            <h2 class="card-value">
+              {{ orderCounts.pending }}
+            </h2> <span class="card-subtext text-warning">Under review</span>
+          </div>
+          <div class="card-icon-wrapper bg-blue-light">
+            <!-- Progress/Loader Logo/Icon -->
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+              class="card-icon text-blue">
+              <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 4: Completed -->
+      <div class="stat-card complete-card">
+        <div class="card-body">
+          <div class="card-info">
+            <span class="card-label">Completed</span>
+            <h2 class="card-value">
+              {{ orderCounts.complete }}
+            </h2> <span class="card-subtext text-success">Successfully Complete</span>
+          </div>
+          <div class="card-icon-wrapper bg-success-light">
+            <!-- Success/Complete Logo/Icon -->
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+              class="card-icon text-success">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+              <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Feedback Received Datatable Section -->
+<div class="datatable-section">
+  <div class="card-header">
+    <div class="header-title-wrapper">
+      <div class="header-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+      </div>
+      <div>
+        <h3>Feedback Received</h3>
+      </div>
+    </div>
+    <span class="badge-count">Latest Feedback</span>
+  </div>
+
+  <div class="table-responsive">
+    <table class="feedback-table">
+      <thead>
+        <tr>
+          <th>User</th>
+          <th>Order No</th>
+          <th>Feedback Message</th>
+          <th>Date</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngIf="feedbackList.length === 0">
+          <td colspan="5" class="empty-state">
+            <div class="empty-content">
+              <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+              <span>No feedback received for today and yesterday.</span>
+            </div>
+          </td>
+        </tr>
+
+        <tr *ngFor="let item of feedbackList">
+          <td>
+            <div class="user-info">
+              <div class="avatar-circle">
+                {{ item.feedbackFrom ? item.feedbackFrom.substring(0, 2).toUpperCase() : 'U' }}
+              </div>
+              <strong class="user-name">{{ item.feedbackFrom }}</strong>
+            </div>
+          </td>
+          <td>
+            <span class="order-tag">{{ item.orderNumber }}</span>
+          </td>
+          <td class="feedback-text" [title]="item.feedbackRemark">
+            {{ item.feedbackRemark || 'No remarks provided' }}
+          </td>
+          <td>
+            <span class="date-text">{{ item.orderDate }}</span>
+          </td>
+          <td>
+            <span class="status-badge" [ngClass]="{
+              'approved': item.status?.toLowerCase() === 'approved',
+              'pending': item.status?.toLowerCase() === 'pending'
+            }">
+              <span class="status-dot"></span>
+              {{ item.status }}
+            </span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+  </div>
+</div>
