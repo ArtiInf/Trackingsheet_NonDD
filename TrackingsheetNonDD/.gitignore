@@ -1,0 +1,21 @@
+## Visual Studio temporary and build files
+.vs/
+[Dd]ebug/
+[Rr]elease/
+x64/
+bld/
+.vs/
+.vs/**
+[Bb]in/
+[Oo]bj/
+[Oo]bj/**
+
+## NuGet Packages
+*.nuget.props
+*.nuget.targets
+packages/
+
+## OS generated files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
