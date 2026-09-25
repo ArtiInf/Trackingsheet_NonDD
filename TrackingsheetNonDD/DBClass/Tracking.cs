@@ -14,6 +14,7 @@ namespace TrackingsheetNonDD.DBClass
 
         private readonly IConfiguration _configuration;
 
+
         public Tracking(IConfiguration configuration)
         {
             _configuration = configuration;
