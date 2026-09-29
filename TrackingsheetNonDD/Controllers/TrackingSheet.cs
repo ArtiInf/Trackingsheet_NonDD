@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Collections;
 using System.Data;
 using TrackingsheetNonDD.DBClass;
-
+using System.Data.SqlClient;
 namespace TrackingsheetNonDD.Controllers
 {
     [Route("api/[controller]")]
@@ -317,7 +317,7 @@ namespace TrackingsheetNonDD.Controllers
             public int RowIndex { get; set; }
             public string DealNo { get; set; }
             public string Criticality { get; set; }
-            public int ProcessID { get; set; }
+            public int processId { get; set; }
             public string OrderDate { get; set; }
             public string errorType { get; set; }
             public string errorField { get; set; }
@@ -375,6 +375,24 @@ namespace TrackingsheetNonDD.Controllers
             catch (Exception ex)
             {
                 return StatusCode(500, new { success = false, message = "Error fetching details.", error = ex.Message });
+            }
+        }
+
+
+        [HttpGet("getProjectProcessId")]
+        public IActionResult getProjectProcessId([FromQuery] int projectId, [FromQuery] string processName)
+        {
+            try
+            {
+                Tracking db = new Tracking(_trackconfiguration);
+
+                int processId = db.getProjectProcessId(projectId, processName);
+
+                return Ok(new { processId });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
             }
         }
     }

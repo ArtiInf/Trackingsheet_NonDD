@@ -656,18 +656,26 @@ today = new Date().toISOString().split('T')[0];
       const yqaUser = currentRow['YQA'] || '';
       const dispUser = currentRow['Disp'] || '';
 
-      if (
-        (lowerKey !== 'pqa' && pqaUser === newValue) ||
-        (lowerKey !== 'yqa' && yqaUser === newValue) ||
-        (lowerKey !== 'disp' && dispUser === newValue)
-      ) {
+      let isConflict = false;
+      if (lowerKey === 'pqa') {
+        // PQA cannot be the same as YQA or Disp
+        isConflict = (yqaUser === newValue || dispUser === newValue);
+      } else if (lowerKey === 'yqa') {
+        // YQA can be the same as Disp, but cannot be the same as PQA
+        isConflict = (pqaUser === newValue);
+      } else if (lowerKey === 'disp') {
+        // Disp can be the same as YQA, but cannot be the same as PQA
+        isConflict = (pqaUser === newValue);
+      }
+
+      if (isConflict) {
         event.target.value = '';
         this.trackingData[rowIndex][key] = '';
 
         Swal.fire({
           icon: 'warning',
           title: 'Process Restriction',
-          text: 'A user cannot handle multiple processes for the same order. Please assign a different user',
+          text: 'A user cannot handle PQA along with YQA or Disp for the same order. Please assign a different user',
           confirmButtonColor: '#3085d6',
           confirmButtonText: 'OK'
         });
@@ -765,11 +773,14 @@ today = new Date().toISOString().split('T')[0];
     this.reportFileMenuOpen = false;
   }
 
-  getTodayDate(): string {
-    const today = new Date();
-    const formattedDate = today.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-    return formattedDate.replace(/ /g, '-');
-  }
+ getTodayDate(): string {
+  const today = new Date();
+  const day = String(today.getDate()).padStart(2, '0');
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const month = months[today.getMonth()];
+  const year = today.getFullYear();
+  return `${day}-${month}-${year}`; 
+}
 
   getTodayDateTimeLocal(): string {
     const today = new Date();
@@ -795,7 +806,7 @@ today = new Date().toISOString().split('T')[0];
     const lowerKey = columnKey.toLowerCase();
 
 
-    const isYqaColumn = lowerKey === 'yqa' || lowerKey === 'yqa status' || lowerKey === 'yqa tat' || lowerKey === 'disp' || lowerKey === 'disp status';
+    const isYqaColumn = lowerKey === 'yqa' || lowerKey === 'yqa status' || lowerKey === 'yqa tat' ;
     if (isYqaColumn && (selectedValue === 'Completed' || selectedValue === 'Complete')) {
 
       const prefix = columnKey.split(' ')[0];
@@ -816,10 +827,7 @@ today = new Date().toISOString().split('T')[0];
       this.selectedRowData = currentRow;
       this.currentRowIndex = rowIndex;
 
-      if (lowerKey.includes('disp')) {
-        this.currentFeedbackProcessName = 'DISP';
-        this.currentPreviousProcessName = 'YQA';
-      } else if (lowerKey.includes('yqa')) {
+     if (lowerKey.includes('yqa')) {
         this.currentFeedbackProcessName = 'YQA';
         this.currentPreviousProcessName = 'PQA';
       } else {
@@ -1628,7 +1636,7 @@ const baseUrl = this.authService.baseUrl;
       this.isFeedbackPopupOpen = true;
     }
   }
-
+processId: number = 0; 
   onFeedbackSubmitted(feedbackData: any): void {
     this.isFeedbackPopupOpen = false;
 
@@ -1636,17 +1644,16 @@ const baseUrl = this.authService.baseUrl;
 
     const payload = {
       projectId: this.projectId,
+     processId: Number(feedbackData.processId) || 0,
       orderNumber: feedbackData.orderNumber,
       processName: feedbackData.processName,
       previousProcessName: feedbackData.previousProcessName,
       feedback: feedbackData.feedback,
       empId: Number(feedbackData.empId) || 0,
       rowIndex: feedbackData.rowIndex,
- 
       dealNo: feedbackData.dealNo || '',
       criticality: feedbackData.criticality,
-      processID: Number(feedbackData.processID) || 0,
-      orderDate: feedbackData.orderDate ? new Date(feedbackData.orderDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).replace(/ /g, '-') : null,      errorType: feedbackData.errorType || '',
+      orderDate: feedbackData.orderDate ? new Date(feedbackData.orderDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).replace(/ /g, '-').replace(/sept/gi, 'sep') : null,      errorType: feedbackData.errorType || '',
       errorField: feedbackData.errorField || '',
       feedbackType: feedbackData.feedbackType || '',
       feedbackReceivedDate: feedbackData.feedbackReceivedDate ? new Date(feedbackData.feedbackReceivedDate).toISOString() : null,      shouldBe: feedbackData.shouldBe || '',

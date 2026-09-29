@@ -274,7 +274,6 @@ namespace TrackingsheetNonDD.DBClass
         {
             using (SqlConnection con = new SqlConnection(_configuration.GetConnectionString("Commitment")))
             {
-                // Replace with your actual stored procedure name for saving process feedback
                 using (SqlCommand cmd = new SqlCommand("usp_InsertFeedbackForNewOrder_KRL", con))
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
@@ -283,7 +282,7 @@ namespace TrackingsheetNonDD.DBClass
                     cmd.Parameters.Add("@DealNo", SqlDbType.NVarChar, 100).Value = (object)model.DealNo ?? DBNull.Value;
                     cmd.Parameters.Add("@OrderDate", SqlDbType.NVarChar, 12).Value = model.OrderDate != default ? model.OrderDate : (object)DBNull.Value;
                     cmd.Parameters.Add("@ProjectID", SqlDbType.BigInt).Value = model.ProjectId;
-                    cmd.Parameters.Add("@ProcessID", SqlDbType.BigInt).Value = model.ProcessID;
+                    cmd.Parameters.Add("@ProcessID", SqlDbType.BigInt).Value = model.processId;
                     cmd.Parameters.Add("@ErrorDoneBy", SqlDbType.NVarChar, 100).Value = (object)model.ErrorDoneBy ?? DBNull.Value;
                     cmd.Parameters.Add("@FeedbackGivenBy", SqlDbType.NVarChar, 100).Value = (object)model.FeedbackGivenBy ?? DBNull.Value;
                     cmd.Parameters.Add("@AddedBy", SqlDbType.BigInt).Value = model.AddedBy;
@@ -419,6 +418,30 @@ namespace TrackingsheetNonDD.DBClass
             };
         }
 
+
+
+        //Get Project wise Traking Sheet Headers and Data 
+        public int getProjectProcessId(int ProjectID, string ProcessName)
+        {
+            int processId = 0;
+            using (SqlConnection con = new SqlConnection(_configuration.GetConnectionString("Commitment")))
+            {
+                using (SqlCommand cmd = new SqlCommand("WBT_usp_GetProcessIdTrackingSheet_YTU", con))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.Add("@ProjectId", SqlDbType.BigInt).Value = ProjectID;
+                    cmd.Parameters.Add("@ProcessName", SqlDbType.NVarChar).Value = ProcessName;
+
+                    con.Open();
+                    object result = cmd.ExecuteScalar();
+                    if (result != null && int.TryParse(result.ToString(), out int id))
+                    {
+                        processId = id;
+                    }
+                }
+            }
+            return processId;
+        }
 
 
 

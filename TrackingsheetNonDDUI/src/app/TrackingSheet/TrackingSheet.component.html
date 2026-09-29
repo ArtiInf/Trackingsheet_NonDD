@@ -229,7 +229,7 @@
 <div class="custom-modal-backdrop" *ngIf="isFeedbackPopupOpen">
     <div class="custom-modal-content">
         <button class="close-popup-btn" (click)="closeFeedbackPopup()">❌</button>
-        <app-feedback-process [projectId]="projectId" [orderNumber]="getOrderNumber(selectedRowData)"
+        <app-feedback-process [projectId]="projectId" [orderNumber]="getOrderNumber(selectedRowData)" [processId]="processId"
             [processName]="currentFeedbackProcessName" [previousProcessName]="currentPreviousProcessName"
             [currentRowIndex]="trackingData.indexOf(selectedRowData)" (feedbackSubmitted)="onFeedbackSubmitted($event)"
             [projectName]="selectedProjectName" [orderDate]="getOrderDate(selectedRowData)" [empId]="loggedInEmpId"
