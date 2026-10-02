@@ -1826,7 +1826,7 @@ startUserProcess(rowIndex: number): void {
     Swal.fire({
       icon: 'success',
       title: `${processTitle} Process Started`,
-      text: `${processTitle} Process started successfully at ${currentDateTime}. Please don't forget to save/update changes!`,
+      text: `${processTitle} Process started successfully at ${currentDateTime}.`,
       confirmButtonColor: '#3085d6',
       timer: 2500
     }).then(() => {
@@ -1835,6 +1835,9 @@ startUserProcess(rowIndex: number): void {
       if (element) {
         element.focus();
       }
+      this.selectedRowData = currentRow;      
+      this.isOrderTrackingPopupOpen = true; 
+      this.cdr.detectChanges();
     });
   }
 }

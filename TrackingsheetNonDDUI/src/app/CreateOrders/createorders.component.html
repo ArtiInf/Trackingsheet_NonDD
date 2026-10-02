@@ -38,7 +38,9 @@
               <select id="projectName" class="form-control" [(ngModel)]="singleOrder.projectId" name="projectId"
               size="1" 
         onfocus="this.size=6;" 
-        onblur="this.size=1;">
+        onblur="this.size=1;"
+        (keydown)="onDropdownKeydown($event)"
+        >
                 <option value="">Select Project</option>
 
                <option *ngFor="let proj of projectsList" [value]="proj.projectId" onclick="document.getElementById('projectName').blur();">
@@ -142,7 +144,9 @@
               <select id="bulkProjectName" class="form-control" [(ngModel)]="bulkOrder.projectId" name="bulkProjectId"
               size="1" 
         onfocus="this.size=6;" 
-        onblur="this.size=1;">
+        onblur="this.size=1;"
+        (keydown)="onDropdownKeydown($event)"
+        >
                 <option value="">Select Project</option>
                 <option *ngFor="let proj of projectsList" [value]="proj.projectId" onclick="document.getElementById('bulkProjectName').blur();">
                   {{ proj.projectName }}

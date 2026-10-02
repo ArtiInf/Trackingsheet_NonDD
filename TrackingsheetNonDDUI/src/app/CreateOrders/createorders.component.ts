@@ -445,4 +445,15 @@ error: (err) => {
       confirmButtonColor: '#297a19'
     });
   }
+
+  onDropdownKeydown(event: KeyboardEvent) {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      event.stopPropagation();
+      const target = event.target as HTMLSelectElement;
+      if (target) {
+        target.blur();
+      }
+    }
+  }
 }
