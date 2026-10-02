@@ -11,9 +11,11 @@
         <div class="form-group">
     <label for="projectName">PROJECT NAME <span class="text-danger">*</span></label>
     <div class="input-wrapper">
-      <select id="projectName" class="form-control" [(ngModel)]="selectedProjectId" size="1" 
+      <select #projSelect id="projectName" class="form-control" [(ngModel)]="selectedProjectId" size="1" 
         onfocus="this.size=6;" 
-        onblur="this.size=1;">
+        onblur="this.size=1;"
+        (change)="projSelect.size=1;"
+        >
         
     <option [value]="0">Select Project</option>
     
