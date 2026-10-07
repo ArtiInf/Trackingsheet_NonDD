@@ -51,7 +51,9 @@ export class TrackingSheetComponent implements OnInit, OnDestroy {
   currentFeedbackText: string = '';
   isProjectManager: boolean = false;
   projectUserCodes: string[] = [];
-today = new Date().toISOString().split('T')[0];
+  today = new Date().toISOString().split('T')[0];
+  processId: number = 0; 
+  isStartButtonVisible: boolean = false; 
   @ViewChild(FeedbackProcess) feedbackProcessComponent!: FeedbackProcess;
   @ViewChild('dropdownContainer') dropdownContainer!: ElementRef;
   private routerSubscription!: Subscription;
@@ -71,7 +73,7 @@ today = new Date().toISOString().split('T')[0];
   }
   ngOnInit(): void {
     const empCode = localStorage.getItem('Code');
-    console.log("employeecode", empCode);
+    //console.log("employeecode", empCode);
     this.loggedInUserCode = empCode || '';
     const EmployeeId = localStorage.getItem('EmployeeID') || '0';
     this.loggedInEmpId = EmployeeId || '';
@@ -85,6 +87,8 @@ today = new Date().toISOString().split('T')[0];
     if (this.projectId > 0) {
       this.fetchUserCode(this.projectId);
     }
+
+    
   }
   @HostListener('document:click', ['$event'])
 
@@ -281,6 +285,9 @@ today = new Date().toISOString().split('T')[0];
     }
     this.updateSelectValue(event, rowIndex, key);
     this.onPqaBlur(key, rowData);
+
+
+
   }
 
   showPqaErrorAlert(): void {
@@ -447,6 +454,9 @@ today = new Date().toISOString().split('T')[0];
     this.selectedRowData = null;
     this.currentRowIndex = -1;
   }
+
+
+
 
   private parseTrackingSheetData(state: any): void {
     this.projectId = state['projectId'] || 0;
@@ -862,7 +872,19 @@ today = new Date().toISOString().split('T')[0];
       }
     }
 
+
+  
     if ((columnKey === 'PQA Status' || columnKey === 'YQA Status' || columnKey === 'Disp Status') && selectedValue && selectedValue.trim() !== '') {
+              const empCode = localStorage.getItem('Code');
+
+      if (currentRow['PQA Status'] === 'In Progress' && 
+        currentRow['PQA Assigned Datetime'] && 
+        (!currentRow['PQA Start Datetime'] || currentRow['PQA Start Datetime'].toString().trim() === '')&&
+        currentRow['PQA'] === empCode) {
+      
+      this.startUserProcess(rowIndex);
+      return;
+    }
       const prefix = columnKey.split(' ')[0];
       const startStr = currentRow[`${prefix} Start Datetime`];
       if (!startStr || startStr.toString().trim() === '') {
@@ -1000,8 +1022,14 @@ today = new Date().toISOString().split('T')[0];
     } else {
       this.trackingData[rowIndex][columnKey] = selectedValue;
     }
+
+   
+  
   }
 
+
+
+  
   calculateProcessTAT(rowIndex: number, prefix: string): void {
     const startStr = this.trackingData[rowIndex][`${prefix} Start Datetime`];
     const endStr = this.trackingData[rowIndex][`${prefix} End Datetime`];
@@ -1106,7 +1134,7 @@ if (keyLower === 'finaltat' || keyLower === 'final tat') {
   if (columnDefinition && columnDefinition.isRequired) {
     return false;
   }
-    /////
+    
     if (keyLower === 'receiveddatetime' || keyLower === 'received date time' || keyLower === 'received_date_time') {
       return true;
     }
@@ -1123,6 +1151,8 @@ if (keyLower === 'finaltat' || keyLower === 'final tat') {
       return true; 
     }
   }
+
+
   return false;
 }
 
@@ -1189,6 +1219,8 @@ if (keyLower === 'finaltat' || keyLower === 'final tat') {
     if (keyLower === 'finaltat' || keyLower === 'final tat') {
       return true;
     }
+
+
 
     const pqaStatusValue = row['PQA Status'] || row['pqa_status'];
     const yqaStatusValue = row['YQA Status'] || row['YQA Status'];
@@ -1636,7 +1668,7 @@ const baseUrl = this.authService.baseUrl;
       this.isFeedbackPopupOpen = true;
     }
   }
-processId: number = 0; 
+
   onFeedbackSubmitted(feedbackData: any): void {
     this.isFeedbackPopupOpen = false;
 
@@ -1866,5 +1898,34 @@ getpqavalue(rowData: any, processType: 'YQA' | 'DISP'): string {
   
   return '';
 }
+
+  shouldShowStartButton(row: any): boolean {
+    const pqaaccualValue = (row['PQA'] || row['pqa_process']);
+    const empCode = localStorage.getItem('Code');
+
+    if (!this.isProjectManager) {
+      if (pqaaccualValue == empCode) {
+        return true;
+
+      }
+      return false;
+
+    }
+
+    const pqaValue = Boolean(row['PQA'] || row['pqa_process']);
+    const pqaassigndatetime = Boolean(row['PQA Assigned Datetime']);
+    const pqastartdatetime = Boolean(row['PQA Start Datetime']);
+
+    if (pqaValue === true || pqaValue) {
+      if (pqaassigndatetime == true) {
+        if (pqastartdatetime == false) {
+          if (pqaaccualValue == empCode) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
+  }
 
 }

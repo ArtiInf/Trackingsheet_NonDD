@@ -66,7 +66,7 @@
                                     [class.has-start]="!isProjectManager && !row.isNew && row['PQA Assigned Datetime'] && (!row['PQA Start Datetime'] || row['PQA Start Datetime'].toString().trim() === '')">
 
                                     <button
-                                        *ngIf="!isProjectManager && !row.isNew && 
+                                        *ngIf="!row.isNew &&  shouldShowStartButton(row)  &&
                                                ((row['PQA Assigned Datetime'] && (!row['PQA Start Datetime'] || row['PQA Start Datetime'].toString().trim() === '')) || 
                                                 (row['YQA Assigned Datetime'] && (!row['YQA Start Datetime'] || row['YQA Start Datetime'].toString().trim() === '')) || 
                                                 (row['Disp Assigned Datetime'] && (!row['Disp Start Datetime'] || row['Disp Start Datetime'].toString().trim() === '')))"

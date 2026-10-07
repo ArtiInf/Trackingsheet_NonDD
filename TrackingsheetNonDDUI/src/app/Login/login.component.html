@@ -1,4 +1,14 @@
 <div class="page-wrapper">
+
+  <div *ngIf="isLoading" class="full-page-loader">
+    <div class="loader-content">
+      <svg class="spinner" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10" stroke-opacity="0.25"></circle>
+        <path d="M12 2a10 10 0 0 1 10 10" stroke-opacity="1"></path>
+      </svg>
+      <span>Authenticating, please wait...</span>
+    </div>
+  </div>
   <div class="login-container">
 
     <!-- Left Decorative & Info Panel -->

@@ -14,7 +14,7 @@ import { LoginRequest, LoginResponse } from '../models/user.model';
 export class LoginComponent implements OnInit {
   loginForm!: FormGroup;
   errorMessage: string = '';
-
+isLoading: boolean = false;
   constructor(private authService: AuthService, private router: Router) { }
 
   ngOnInit(): void {
@@ -26,15 +26,20 @@ export class LoginComponent implements OnInit {
 
   onSubmit() {
     if (this.loginForm.valid) {
+      this.isLoading = true; // <-- Loader chalu kara
+      this.errorMessage = ''; // Purani error clear kara
       this.authService.login(this.loginForm.value).subscribe({
         next: (response: LoginResponse) => {
+          this.isLoading = false;
           this.router.navigate(['/dashboard']);
         },
         error: (err: any) => {
+          this.isLoading = false;
           this.errorMessage = 'Incorrect Password';
         }
       });
     } else {
+      this.isLoading = false;
       this.errorMessage = 'Fill Correct Information';
     }
   }
