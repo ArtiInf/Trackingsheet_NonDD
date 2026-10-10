@@ -8,7 +8,9 @@ import { LoginRequest } from '../models/user.model';
   providedIn: 'root'
 })
 export class AuthService {
+//public baseUrl = '/tracking-api/api';
 public baseUrl = 'https://localhost:7241/api';
+
   private getLocalItem(key: string): string | null {
     return typeof window !== 'undefined' ? localStorage.getItem(key) : null;
   }
@@ -28,6 +30,9 @@ public baseUrl = 'https://localhost:7241/api';
   private isPmSubject = new BehaviorSubject<boolean>(this.getLocalItem('isProjectManager') === 'true');
   isProjectManager$ = this.isPmSubject.asObservable();
 
+  private psuedoNameSubject = new BehaviorSubject<string | null>(this.getLocalItem('PsuedoName'));
+  PsuedoName$ = this.psuedoNameSubject.asObservable();
+
   constructor(private http: HttpClient) { }
 
   login(data: LoginRequest): Observable<any> {
@@ -45,7 +50,7 @@ public baseUrl = 'https://localhost:7241/api';
     return this.http.post<any>(`${this.baseUrl}/Login`, {}, { params }).pipe(
       switchMap((loginRes: any) => {
         const isProjectManager = loginRes.isProjectManager ?? false;
-
+const psuedoName = loginRes.PsuedoName || loginRes.psuedoName || '';
 
         return this.http.get<any[]>(`${this.baseUrl}/Login/${userEmail}`).pipe(
           tap((userInfoArray) => {
@@ -71,12 +76,14 @@ public baseUrl = 'https://localhost:7241/api';
               console.log('Designation:', designation);
               console.log('Code:', Code);
               console.log('isProjectManager:', isProjectManager);
+              console.log('PsuedoName:', psuedoName);
               if (typeof window !== 'undefined') {
                 localStorage.setItem('userFullName', fullName);
                 localStorage.setItem('userDesignation', designation);
                 localStorage.setItem('EmployeeID', EmployeeId);
                 localStorage.setItem('Code', Code);
                 localStorage.setItem('isProjectManager', isProjectManager.toString());
+                localStorage.setItem('PsuedoName', psuedoName.toString());
               }
 
               this.userSubject.next(fullName);
@@ -84,6 +91,7 @@ public baseUrl = 'https://localhost:7241/api';
               this.EmployeeIDsubject.next(EmployeeId);
               this.Code.next(Code);
               this.isPmSubject.next(isProjectManager);
+              this.psuedoNameSubject.next(psuedoName);
             } else {
               console.warn('Login failed: User profile details not found in response.');
               throw new Error('User profile details not found');
@@ -100,10 +108,12 @@ public baseUrl = 'https://localhost:7241/api';
       localStorage.removeItem('userDesignation');
       localStorage.removeItem('EmployeeID');
       localStorage.removeItem('Code');
+      localStorage.removeItem('PsuedoName');
     }
     this.userSubject.next(null);
     this.designationSubject.next(null);
     this.EmployeeIDsubject.next(null);
+    this.psuedoNameSubject.next(null);
     console.log('User logged out. LocalStorage and subjects cleared.');
   }
 

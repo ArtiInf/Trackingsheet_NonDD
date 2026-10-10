@@ -56,7 +56,10 @@ namespace TrackingsheetNonDD.Controllers
             int pmStatus = login.CheckPM(ReturnValue);
             bool isProjectManager = (pmStatus > 0);
 
-            return Ok(new { message = "Login successful!", employeeId = ReturnValue, isProjectManager = isProjectManager });
+
+            string psuedoName = login.GetPsuedoNameByCode(ReturnValue);
+
+            return Ok(new { message = "Login successful!", employeeId = ReturnValue, isProjectManager = isProjectManager, PsuedoName = psuedoName });
         }
         [HttpGet("GetProject")] 
         public IActionResult GetProject(string EmployeeId)

@@ -445,7 +445,30 @@ namespace TrackingsheetNonDD.DBClass
 
 
 
+        public string GetPsuedoNameByCode(int EmployeeID)
+        {
+            string psuedoName = string.Empty;
 
+            using (SqlConnection con = new SqlConnection(_configuration.GetConnectionString("Commitment")))
+            {
+                using (SqlCommand cmd = new SqlCommand("WBT_usp_GetPsuedoNameByCode_YTU", con))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.Add("@EmployeeID", SqlDbType.BigInt).Value = EmployeeID;
+
+                    con.Open();
+
+                    // ExecuteScalar वापरून आपण थेट Stored Procedure मधून PsuedoName ची string value घेऊ शकतो
+                    object result = cmd.ExecuteScalar();
+                    if (result != null && result != DBNull.Value)
+                    {
+                        psuedoName = result.ToString();
+                    }
+                }
+            }
+
+            return psuedoName;
+        }
     }
 }
 

@@ -54,6 +54,7 @@ export class TrackingSheetComponent implements OnInit, OnDestroy {
   today = new Date().toISOString().split('T')[0];
   processId: number = 0; 
   isStartButtonVisible: boolean = false; 
+    PsuedoName :string='';
   @ViewChild(FeedbackProcess) feedbackProcessComponent!: FeedbackProcess;
   @ViewChild('dropdownContainer') dropdownContainer!: ElementRef;
   private routerSubscription!: Subscription;
@@ -77,7 +78,12 @@ export class TrackingSheetComponent implements OnInit, OnDestroy {
     this.loggedInUserCode = empCode || '';
     const EmployeeId = localStorage.getItem('EmployeeID') || '0';
     this.loggedInEmpId = EmployeeId || '';
+const psuedoNameFromStorage = localStorage.getItem('PsuedoName');
+  console.log('PsuedoName from localStorage:', psuedoNameFromStorage);
 
+  this.authService.PsuedoName$.subscribe(psuedo => {
+    console.log('PsuedoName from Observable:', psuedo);
+  });
     this.authService.isProjectManager$.subscribe(isPm => {
       this.isProjectManager = isPm;
       console.log('isProjectManager:', this.isProjectManager);
@@ -112,15 +118,15 @@ export class TrackingSheetComponent implements OnInit, OnDestroy {
       }
     }
   }
-  checkPqaKeyboard(event: KeyboardEvent, rowData: any): void {
-    const pqaProcessValue = rowData['PQA Process'] || rowData['pqa_process'];
-    if (!pqaProcessValue || pqaProcessValue.trim() === '') {
-      if (event.key !== 'Tab') {
-        event.preventDefault();
-        this.showPqaErrorAlert();
-      }
-    }
-  }
+  // checkPqaKeyboard(event: KeyboardEvent, rowData: any): void {
+  //   const pqaProcessValue = rowData['PQA Process'] || rowData['pqa_process'];
+  //   if (!pqaProcessValue || pqaProcessValue.trim() === '') {
+  //     if (event.key !== 'Tab') {
+  //       event.preventDefault();
+  //       this.showPqaErrorAlert();
+  //     }
+  //   }
+  // }
   onFileSelectedForUpload(eventData: { file: File, rowData: any }): void {
     let fileProcessName = '';
     if (eventData && eventData.rowData) {
@@ -647,6 +653,7 @@ export class TrackingSheetComponent implements OnInit, OnDestroy {
   updateSelectValue(event: any, rowIndex: number, key: string): void {
 
     const newValue = event.target.value;
+    console.log('nasff' ,newValue)
     const currentRow = this.trackingData[rowIndex];
     currentRow.isModify = true;
     currentRow.modifiedColumn = key;
@@ -665,17 +672,19 @@ export class TrackingSheetComponent implements OnInit, OnDestroy {
       const pqaUser = currentRow['PQA'] || '';
       const yqaUser = currentRow['YQA'] || '';
       const dispUser = currentRow['Disp'] || '';
-
-      let isConflict = false;
+const psuedoName = (localStorage.getItem('PsuedoName') || '').trim().toUpperCase();   
+   let isConflict = false;
       if (lowerKey === 'pqa') {
         // PQA cannot be the same as YQA or Disp
-        isConflict = (yqaUser === newValue || dispUser === newValue);
+        isConflict = (yqaUser === newValue || dispUser === newValue );
+
       } else if (lowerKey === 'yqa') {
-        // YQA can be the same as Disp, but cannot be the same as PQA
-        isConflict = (pqaUser === newValue);
+
+        isConflict = (pqaUser === newValue ||pqaUser === psuedoName);
+          console.log('5',isConflict)
       } else if (lowerKey === 'disp') {
         // Disp can be the same as YQA, but cannot be the same as PQA
-        isConflict = (pqaUser === newValue);
+        isConflict = (pqaUser === newValue ||pqaUser === psuedoName);
       }
 
       if (isConflict) {
@@ -876,15 +885,37 @@ export class TrackingSheetComponent implements OnInit, OnDestroy {
   
     if ((columnKey === 'PQA Status' || columnKey === 'YQA Status' || columnKey === 'Disp Status') && selectedValue && selectedValue.trim() !== '') {
               const empCode = localStorage.getItem('Code');
+const psuedoName = localStorage.getItem('PsuedoName') ? localStorage.getItem('PsuedoName')!.trim().toLowerCase() : '';
 
-      if (currentRow['PQA Status'] === 'In Progress' && 
-        currentRow['PQA Assigned Datetime'] && 
-        (!currentRow['PQA Start Datetime'] || currentRow['PQA Start Datetime'].toString().trim() === '')&&
-        currentRow['PQA'] === empCode) {
-      
-      this.startUserProcess(rowIndex);
-      return;
-    }
+const currentPqa = currentRow['PQA'] ? currentRow['PQA'].toString().trim().toLowerCase() : '';
+const currentYqa = currentRow['YQA'] ? currentRow['YQA'].toString().trim().toLowerCase() : '';
+const currentDisp = currentRow['Disp'] ? currentRow['Disp'].toString().trim().toLowerCase() : '';
+
+const cleanEmpCode = empCode ? empCode.trim().toLowerCase() : '';
+const cleanPseudo = psuedoName ? psuedoName.trim().toLowerCase() : '';
+
+if (
+  // 1. PQA Check
+  (currentRow['PQA Status'] === 'In Progress' && 
+   currentRow['PQA Assigned Datetime'] && 
+   (!currentRow['PQA Start Datetime'] || currentRow['PQA Start Datetime'].toString().trim() === '') &&
+   (currentPqa === cleanEmpCode || currentPqa === cleanPseudo)) 
+  ||
+  // 2. YQA Check
+  (currentRow['YQA Status'] === 'In Progress' && 
+   currentRow['YQA Assigned Datetime'] && 
+   (!currentRow['YQA Start Datetime'] || currentRow['YQA Start Datetime'].toString().trim() === '') &&
+   (currentYqa === cleanEmpCode || currentYqa === cleanPseudo)) 
+  ||
+  // 3. Disp Check
+  (currentRow['Disp Status'] === 'In Progress' && 
+   currentRow['Disp Assigned Datetime'] && 
+   (!currentRow['Disp Start Datetime'] || currentRow['Disp Start Datetime'].toString().trim() === '') &&
+   (currentDisp === cleanEmpCode || currentDisp === cleanPseudo))
+) {
+  this.startUserProcess(rowIndex);
+  return;
+}
       const prefix = columnKey.split(' ')[0];
       const startStr = currentRow[`${prefix} Start Datetime`];
       if (!startStr || startStr.toString().trim() === '') {
@@ -1027,9 +1058,6 @@ export class TrackingSheetComponent implements OnInit, OnDestroy {
   
   }
 
-
-
-  
   calculateProcessTAT(rowIndex: number, prefix: string): void {
     const startStr = this.trackingData[rowIndex][`${prefix} Start Datetime`];
     const endStr = this.trackingData[rowIndex][`${prefix} End Datetime`];
@@ -1123,7 +1151,19 @@ export class TrackingSheetComponent implements OnInit, OnDestroy {
 
 isColumnInRangeToDisable(colKey: string, row: any): boolean {
     const keyLower = colKey.toLowerCase();
-    /////
+if (!this.isProjectManager) {
+        const pqaSt = row['PQA Status'] ? row['PQA Status'].toString().trim().toLowerCase() : '';
+        const yqaSt = row['YQA Status'] ? row['YQA Status'].toString().trim().toLowerCase() : '';
+        const dispSt = row['Disp Status'] ? row['Disp Status'].toString().trim().toLowerCase() : '';
+
+        const isPqaCompleted = (pqaSt === 'completed' || pqaSt === 'done');
+        const isYqaCompleted = (yqaSt === 'completed' || yqaSt === 'done');
+        const isDispCompleted = (dispSt === 'completed' || dispSt === 'done');
+
+        if (isPqaCompleted && isYqaCompleted && isDispCompleted) {
+            return true; 
+        }
+    }
 if (keyLower === 'finaltat' || keyLower === 'final tat') {
     return true;
   }
@@ -1160,6 +1200,7 @@ if (keyLower === 'finaltat' || keyLower === 'final tat') {
 
     const pqaStatus = row['PQA Status'] ? row['PQA Status'].toString().trim().toLowerCase() : '';
     const yqaStatus = row['YQA Status'] ? row['YQA Status'].toString().trim().toLowerCase() : '';
+    const dispStatus = row['Disp Status'] ? row['Disp Status'].toString().trim().toLowerCase() : '';
 
     const isPqaDone = (pqaStatus === 'completed' || pqaStatus === 'done');
     const isYqaDone = (yqaStatus === 'completed' || yqaStatus === 'done');
@@ -1171,24 +1212,88 @@ if (keyLower === 'finaltat' || keyLower === 'final tat') {
     if (keyLower.includes('disp') && (!isPqaDone || !isYqaDone)) {
       return true; 
     }
+    const psuedoName = localStorage.getItem('PsuedoName') ? localStorage.getItem('PsuedoName')!.trim().toLowerCase() : '';
+
 
     if (!this.isProjectManager) {
-      let processUserCode = '';
-      if (keyLower.includes('pqa')) {
-        processUserCode = row['PQA'] || row['pqa'] || '';
-      } else if (keyLower.includes('yqa')) {
-        processUserCode = row['YQA'] || row['yqa'] || '';
-      } else if (keyLower.includes('disp')) {
-        processUserCode = row['Disp'] || row['disp'] || '';
-      }
-
-      if (processUserCode && processUserCode.toString().trim() !== '') {
-        if (processUserCode.toString().trim() !== this.loggedInUserCode.toString().trim()) {
-          return true; 
+        let processUserCode = '';
+        let assignedDateKey = '';
+        let startDateKey = '';
+        
+        if (keyLower.includes('pqa')) {
+            processUserCode = row['PQA'] || row['pqa'] || '';
+            assignedDateKey = 'PQA Assigned Datetime';
+            startDateKey = 'PQA Start Datetime';
+        } else if (keyLower.includes('yqa')) {
+            processUserCode = row['YQA'] || row['yqa'] || '';
+            assignedDateKey = 'YQA Assigned Datetime';
+            startDateKey = 'YQA Start Datetime';
+        } else if (keyLower.includes('disp')) {
+            processUserCode = row['Disp'] || row['disp'] || '';
+            assignedDateKey = 'Disp Assigned Datetime';
+            startDateKey = 'Disp Start Datetime';
         }
-      }
-    }
 
+        if (processUserCode && processUserCode.toString().trim() !== '') {
+            const val = processUserCode.toString().trim().toLowerCase();
+            const code = this.loggedInUserCode ? this.loggedInUserCode.toString().trim().toLowerCase() : '';
+            const pseudo = psuedoName ? psuedoName.toString().trim().toLowerCase() : '';
+
+            const isMyProcess = (code && val === code) || (pseudo && val === pseudo);
+
+            if (isMyProcess) {
+                let currentStatus = '';
+                if (keyLower.includes('pqa')) currentStatus = pqaStatus;
+                if (keyLower.includes('yqa')) currentStatus = yqaStatus;
+                if (keyLower.includes('disp')) currentStatus = dispStatus;
+
+                if (currentStatus === 'completed' || currentStatus === 'done') {
+                    return true;
+                }
+
+                const hasAssignedDate = Boolean(row[assignedDateKey]);
+                const startDate = row[startDateKey];
+                const isStartDateEmpty = !startDate || startDate.toString().trim() === '' || startDate.toString().includes('0000');
+
+                if (hasAssignedDate && isStartDateEmpty) {
+                    return false;
+                }
+            }
+
+            if (processUserCode.toString().trim() !== this.loggedInUserCode.toString().trim() && processUserCode.toString().trim() !== psuedoName.toString().trim() && pqaStatus =='Completed') {
+                return true;
+            }
+            
+        }  
+    }
+else{
+  const pqaSt = row['PQA Status'] ? row['PQA Status'].toString().trim().toLowerCase() : '';
+        const yqaSt = row['YQA Status'] ? row['YQA Status'].toString().trim().toLowerCase() : '';
+        const dispSt = row['Disp Status'] ? row['Disp Status'].toString().trim().toLowerCase() : '';
+
+        if (keyLower.includes('pqa') && (pqaSt === 'completed' || pqaSt === 'done')) {
+            return true;
+        }
+        if (keyLower.includes('pqa') && pqaSt === 'hold') {
+            return false;
+        }
+
+        if (keyLower.includes('yqa') && (yqaSt === 'completed' || yqaSt === 'done')) {
+            return true;
+        }
+        if (keyLower.includes('yqa') && yqaSt === 'hold') {
+            return false;
+        }
+
+     
+        if (keyLower.includes('disp') && (dispSt === 'completed' || dispSt === 'done')) {
+            return true;
+        }
+        if (keyLower.includes('disp') && dispSt === 'hold') {
+            return false;
+        }
+}
+  
     if (keyLower === 'pqa' || keyLower === 'yqa' || keyLower === 'disp') {
       if (row.isNew) return false;
       const dropdownValue = row[colKey];
@@ -1899,33 +2004,77 @@ getpqavalue(rowData: any, processType: 'YQA' | 'DISP'): string {
   return '';
 }
 
-  shouldShowStartButton(row: any): boolean {
-    const pqaaccualValue = (row['PQA'] || row['pqa_process']);
-    const empCode = localStorage.getItem('Code');
+//   shouldShowStartButton(row: any): boolean {
+//   const empCode = localStorage.getItem('Code');
+// const psuedoName = localStorage.getItem('PsuedoName');
+//   // 1. PQA Check
+//   const pqaActualValue = (row['PQA'] || row['pqa_process']);
+//   const pqaAssignedDatetime = Boolean(row['PQA Assigned Datetime']);
+//   const pqaStartDatetime = Boolean(row['PQA Start Datetime']);
+
+//   // 2. YQA Check
+//   const yqaActualValue = (row['YQA'] || row['yqa_process']);
+//   const yqaAssignedDatetime = Boolean(row['YQA Assigned Datetime']);
+//   const yqaStartDatetime = Boolean(row['YQA Start Datetime']);
+
+//   // 3. Disp Check
+//   const dispActualValue = (row['Disp'] || row['disp_process']);
+//   const dispAssignedDatetime = Boolean(row['Disp Assigned Datetime']);
+//   const dispStartDatetime = Boolean(row['Disp Start Datetime']);
+
+//   if (!this.isProjectManager) {
+//     if (pqaActualValue == empCode || yqaActualValue == empCode  || dispActualValue == empCode) {
+//       return true;
+//     }
+//     return false;
+//   }
+
+//   const isPqaValid = pqaActualValue && pqaAssignedDatetime && !pqaStartDatetime && pqaActualValue == empCode || psuedoName;
+//   const isYqaValid = yqaActualValue && yqaAssignedDatetime && !yqaStartDatetime && yqaActualValue == empCode ||psuedoName;
+//   const isDispValid = dispActualValue && dispAssignedDatetime && !dispStartDatetime && dispActualValue == empCode||psuedoName;
+
+//   if (isPqaValid || isYqaValid || isDispValid) {
+//     return true;
+//   }
+
+//   return false;
+// }
+shouldShowStartButton(row: any): boolean {
+    const empCode = localStorage.getItem('Code') ? localStorage.getItem('Code')!.trim().toLowerCase() : '';
+    const psuedoName = localStorage.getItem('PsuedoName') ? localStorage.getItem('PsuedoName')!.trim().toLowerCase() : '';
+
+    const pqaActualValue = (row['PQA'] || row['pqa_process']) ? (row['PQA'] || row['pqa_process']).toString().trim().toLowerCase() : '';
+    const pqaAssignedDatetime = Boolean(row['PQA Assigned Datetime']);
+    const pqaStartDatetime = Boolean(row['PQA Start Datetime']);
+
+    const yqaActualValue = (row['YQA'] || row['yqa_process']) ? (row['YQA'] || row['yqa_process']).toString().trim().toLowerCase() : '';
+    const yqaAssignedDatetime = Boolean(row['YQA Assigned Datetime']);
+    const yqaStartDatetime = Boolean(row['YQA Start Datetime']);
+
+    const dispActualValue = (row['Disp'] || row['disp_process']) ? (row['Disp'] || row['disp_process']).toString().trim().toLowerCase() : '';
+    const dispAssignedDatetime = Boolean(row['Disp Assigned Datetime']);
+    const dispStartDatetime = Boolean(row['Disp Start Datetime']);
+
+    const isValidUser = (val: string) => {
+      if (!val) return false;
+      return (empCode && val === empCode) || (psuedoName && val === psuedoName);
+    };
 
     if (!this.isProjectManager) {
-      if (pqaaccualValue == empCode) {
+      if (isValidUser(pqaActualValue) || isValidUser(yqaActualValue) || isValidUser(dispActualValue)) {
         return true;
-
       }
       return false;
-
     }
 
-    const pqaValue = Boolean(row['PQA'] || row['pqa_process']);
-    const pqaassigndatetime = Boolean(row['PQA Assigned Datetime']);
-    const pqastartdatetime = Boolean(row['PQA Start Datetime']);
+    const isPqaValid = pqaActualValue && pqaAssignedDatetime && !pqaStartDatetime && isValidUser(pqaActualValue);
+    const isYqaValid = yqaActualValue && yqaAssignedDatetime && !yqaStartDatetime && isValidUser(yqaActualValue);
+    const isDispValid = dispActualValue && dispAssignedDatetime && !dispStartDatetime && isValidUser(dispActualValue);
 
-    if (pqaValue === true || pqaValue) {
-      if (pqaassigndatetime == true) {
-        if (pqastartdatetime == false) {
-          if (pqaaccualValue == empCode) {
-            return true;
-          }
-        }
-      }
+    if (isPqaValid || isYqaValid || isDispValid) {
+      return true;
     }
+
     return false;
   }
-
 }
