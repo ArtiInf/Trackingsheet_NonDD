@@ -458,7 +458,6 @@ namespace TrackingsheetNonDD.DBClass
 
                     con.Open();
 
-                    // ExecuteScalar वापरून आपण थेट Stored Procedure मधून PsuedoName ची string value घेऊ शकतो
                     object result = cmd.ExecuteScalar();
                     if (result != null && result != DBNull.Value)
                     {

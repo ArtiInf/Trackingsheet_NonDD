@@ -8,7 +8,7 @@ import { LoginRequest } from '../models/user.model';
   providedIn: 'root'
 })
 export class AuthService {
-//public baseUrl = '/tracking-api/api';
+// public baseUrl = '/tracking-api/api';
 public baseUrl = 'https://localhost:7241/api';
 
   private getLocalItem(key: string): string | null {
