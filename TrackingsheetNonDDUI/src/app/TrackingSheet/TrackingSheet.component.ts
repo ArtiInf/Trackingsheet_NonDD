@@ -73,8 +73,8 @@ export class TrackingSheetComponent implements OnInit, OnDestroy {
     this.focusInput(false);
   }
   ngOnInit(): void {
+     this.refreshCurrentData();
     const empCode = localStorage.getItem('Code');
-    //console.log("employeecode", empCode);
     this.loggedInUserCode = empCode || '';
     const EmployeeId = localStorage.getItem('EmployeeID') || '0';
     this.loggedInEmpId = EmployeeId || '';
@@ -2004,41 +2004,7 @@ getpqavalue(rowData: any, processType: 'YQA' | 'DISP'): string {
   return '';
 }
 
-//   shouldShowStartButton(row: any): boolean {
-//   const empCode = localStorage.getItem('Code');
-// const psuedoName = localStorage.getItem('PsuedoName');
-//   // 1. PQA Check
-//   const pqaActualValue = (row['PQA'] || row['pqa_process']);
-//   const pqaAssignedDatetime = Boolean(row['PQA Assigned Datetime']);
-//   const pqaStartDatetime = Boolean(row['PQA Start Datetime']);
 
-//   // 2. YQA Check
-//   const yqaActualValue = (row['YQA'] || row['yqa_process']);
-//   const yqaAssignedDatetime = Boolean(row['YQA Assigned Datetime']);
-//   const yqaStartDatetime = Boolean(row['YQA Start Datetime']);
-
-//   // 3. Disp Check
-//   const dispActualValue = (row['Disp'] || row['disp_process']);
-//   const dispAssignedDatetime = Boolean(row['Disp Assigned Datetime']);
-//   const dispStartDatetime = Boolean(row['Disp Start Datetime']);
-
-//   if (!this.isProjectManager) {
-//     if (pqaActualValue == empCode || yqaActualValue == empCode  || dispActualValue == empCode) {
-//       return true;
-//     }
-//     return false;
-//   }
-
-//   const isPqaValid = pqaActualValue && pqaAssignedDatetime && !pqaStartDatetime && pqaActualValue == empCode || psuedoName;
-//   const isYqaValid = yqaActualValue && yqaAssignedDatetime && !yqaStartDatetime && yqaActualValue == empCode ||psuedoName;
-//   const isDispValid = dispActualValue && dispAssignedDatetime && !dispStartDatetime && dispActualValue == empCode||psuedoName;
-
-//   if (isPqaValid || isYqaValid || isDispValid) {
-//     return true;
-//   }
-
-//   return false;
-// }
 shouldShowStartButton(row: any): boolean {
     const empCode = localStorage.getItem('Code') ? localStorage.getItem('Code')!.trim().toLowerCase() : '';
     const psuedoName = localStorage.getItem('PsuedoName') ? localStorage.getItem('PsuedoName')!.trim().toLowerCase() : '';
